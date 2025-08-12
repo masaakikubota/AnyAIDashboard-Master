@@ -1,0 +1,80 @@
+name: Gemini Ops
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ main ]
+  issues:
+    types: [opened, edited]
+  issue_comment:
+    types: [created]
+
+# 同時に何本も走らないよう制御
+concurrency:
+  group: gemini-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # --- ① PR 自動レビュー ---
+  pr_review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Review PR with Gemini
+        uses: google-github-actions/run-gemini-cli@v1
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          workflow: pr-review
+          # 任意でモデル/出力長を調整
+          # model: gemini-1.5-pro
+          # max_output_tokens: 2048
+          prompt: |
+            このPRをレビューしてください。安全性/正確性/性能/セキュリティ/テスト不足を重視し、
+            影響範囲と具体的な修正例、追加入るべきテスト案もコメントしてください。
+
+  # --- ② Issue 自動トリアージ ---
+  issue_triage:
+    if: github.event_name == 'issues'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Triage Issue with Gemini
+        uses: google-github-actions/run-gemini-cli@v1
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          workflow: issue-triage
+          prompt: |
+            このIssueをカテゴリ分け（bug/feature/question/docs 等）し、既存ラベルがあれば適用。
+            再現手順や期待結果が不足していればテンプレ質問をコメントしてください。
+            近い既存IssueやPRへのリンク候補があれば提示してください。
+
+  # --- ③ スラッシュコマンド（手動起動）---
+  slash_commands:
+    if: github.event_name == 'issue_comment' && (
+        contains(github.event.comment.body, '/review') ||
+        contains(github.event.comment.body, '/triage')
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run on slash command
+        uses: google-github-actions/run-gemini-cli@v1
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          workflow: ${{ contains(github.event.comment.body, '/review') && 'pr-review' || 'issue-triage' }}
+          prompt: |
+            コメントでの明示的な依頼に基づき、丁寧に短く要点をまとめて出力してください。
