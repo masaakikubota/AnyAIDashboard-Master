@@ -35,16 +35,8 @@
             <p class="lead">Google Apps Scriptをバッチ処理で連続実行します。</p>
             <form id="runner-form">
                 <div class="mb-3">
-                    <label for="gas-url" class="form-label">GAS Web App URL</label>
-                    <input type="url" class="form-control" id="gas-url" value="https://script.google.com/macros/s/AKfycbxCWOeVHewnDrH5WNVqEJJp34mj2DZJrvcnC4yuouKLdcHpzvXdvOwrhd6BG0q1yXkZ/exec" required>
-                </div>
-                <div class="mb-3">
                     <label for="sheet-id" class="form-label">Spreadsheet ID</label>
                     <input type="text" class="form-control" id="sheet-id" value="19g2vepsYjMHJc5RUNnfO9UXILU7fbPpxtwc5-JddO4M" required>
-                </div>
-                <div class="mb-3">
-                    <label for="token" class="form-label">Token</label>
-                    <input type="text" class="form-control" id="token" value="AnyAIDashboard_ATT" required>
                 </div>
                 <div class="row">
                     <div class="col-md-4 mb-3">
@@ -77,6 +69,10 @@
         const executeButton = form.querySelector('button[type="submit"]');
         const stopButton = document.getElementById('stop-button');
 
+        // ★★★ 値をここに固定 ★★★
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxCWOeVHewnDrH5WNVqEJJp34mj2DZJrvcnC4yuouKLdcHpzvXdvOwrhd6BG0q1yXkZ/exec";
+        const TOKEN = "AnyAIDashboard_ATT";
+
         let shouldStop = false;
 
         function log(message, color = 'black') {
@@ -94,14 +90,12 @@
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
             
-            const gasUrl = document.getElementById('gas-url').value;
             const spreadsheetId = document.getElementById('sheet-id').value;
-            const token = document.getElementById('token').value;
             const startRow = parseInt(document.getElementById('start-row').value, 10);
             const lastRow = parseInt(document.getElementById('end-row').value, 10);
             const batchSize = parseInt(document.getElementById('batch-size').value, 10);
 
-            if (!gasUrl || !spreadsheetId || !token || isNaN(startRow) || isNaN(lastRow) || isNaN(batchSize)) {
+            if (!spreadsheetId || isNaN(startRow) || isNaN(lastRow) || isNaN(batchSize)) {
                 log('すべてのフィールドを正しく入力してください。', 'red');
                 return;
             }
@@ -127,13 +121,13 @@
 
                     const payload = {
                         spreadsheetId,
-                        token,
+                        token: TOKEN, // ★ 固定値を使用
                         startRow: start,
                         endRow: end,
                     };
 
                     try {
-                        const response = await fetch(gasUrl, {
+                        const response = await fetch(GAS_URL, { // ★ 固定値を使用
                             method: 'POST',
                             mode: 'no-cors',
                             cache: 'no-cache',
