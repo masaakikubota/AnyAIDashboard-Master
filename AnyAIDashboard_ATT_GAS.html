@@ -4,60 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAS Batch Runner - ATT</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            padding-top: 4.5rem;
-        }
-        #log-container {
-            height: 400px;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 0.25rem;
-            padding: 1rem;
-            overflow-y: scroll;
-            font-family: monospace;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-    </style>
+    <link rel="stylesheet" href="tokens.css">
+    <link rel="stylesheet" href="custom.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">GAS Batch Runner (ATT)</a>
-        </div>
+    <nav class="navbar">
+        <a class="navbar-brand" href="index.html">GAS Batch Runner (ATT)</a>
     </nav>
 
     <main class="container">
-        <div class="bg-light p-5 rounded">
+        <div class="header-section">
             <h1>GAS実行設定 (ATT)</h1>
-            <p class="lead">Google Apps Scriptをバッチ処理で連続実行します。</p>
+            <p>Google Apps Scriptをバッチ処理で連続実行します。</p>
             <form id="runner-form">
-                <div class="mb-3">
+                <div class="form-group">
                     <label for="sheet-url" class="form-label">Spreadsheet URL</label>
                     <input type="url" class="form-control" id="sheet-url" value="https://docs.google.com/spreadsheets/d/19g2vepsYjMHJc5RUNnfO9UXILU7fbPpxtwc5-JddO4M/edit" required>
                 </div>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
+                <div class="form-grid">
+                    <div class="form-group">
                         <label for="start-row" class="form-label">開始行</label>
                         <input type="number" class="form-control" id="start-row" value="5" required>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="form-group">
                         <label for="end-row" class="form-label">終了行</label>
                         <input type="number" class="form-control" id="end-row" value="4004" required>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="form-group">
                         <label for="batch-size" class="form-label">バッチサイズ</label>
                         <input type="number" class="form-control" id="batch-size" value="20" required>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">実行</button>
-                <button type="button" class="btn btn-secondary" id="stop-button" disabled>停止</button>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">実行</button>
+                    <button type="button" class="btn btn-secondary" id="stop-button" disabled>停止</button>
+                </div>
             </form>
         </div>
 
-        <div class="mt-4">
+        <div class="log-section">
             <h2>実行ログ</h2>
             <div id="log-container"></div>
         </div>
@@ -81,7 +66,7 @@
         }
 
         function extractSheetId(url) {
-            const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+            const match = url.match(///d\/([a-zA-Z0-9-_]+)/);
             return match ? match[1] : null;
         }
 
