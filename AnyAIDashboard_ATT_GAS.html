@@ -35,8 +35,8 @@
             <p class="lead">Google Apps Scriptをバッチ処理で連続実行します。</p>
             <form id="runner-form">
                 <div class="mb-3">
-                    <label for="sheet-id" class="form-label">Spreadsheet ID</label>
-                    <input type="text" class="form-control" id="sheet-id" value="19g2vepsYjMHJc5RUNnfO9UXILU7fbPpxtwc5-JddO4M" required>
+                    <label for="sheet-url" class="form-label">Spreadsheet URL</label>
+                    <input type="url" class="form-control" id="sheet-url" value="https://docs.google.com/spreadsheets/d/19g2vepsYjMHJc5RUNnfO9UXILU7fbPpxtwc5-JddO4M/edit" required>
                 </div>
                 <div class="row">
                     <div class="col-md-4 mb-3">
@@ -69,7 +69,6 @@
         const executeButton = form.querySelector('button[type="submit"]');
         const stopButton = document.getElementById('stop-button');
 
-        // ★★★ 値をここに固定 ★★★
         const GAS_URL = "https://script.google.com/macros/s/AKfycbxCWOeVHewnDrH5WNVqEJJp34mj2DZJrvcnC4yuouKLdcHpzvXdvOwrhd6BG0q1yXkZ/exec";
         const TOKEN = "AnyAIDashboard_ATT";
 
@@ -81,6 +80,11 @@
             logContainer.scrollTop = logContainer.scrollHeight;
         }
 
+        function extractSheetId(url) {
+            const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+            return match ? match[1] : null;
+        }
+
         stopButton.addEventListener('click', () => {
             shouldStop = true;
             log('停止信号を送信しました。現在のバッチ処理が完了後に停止します。', 'orange');
@@ -90,17 +94,25 @@
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
             
-            const spreadsheetId = document.getElementById('sheet-id').value;
+            const sheetUrl = document.getElementById('sheet-url').value;
+            const spreadsheetId = extractSheetId(sheetUrl);
+            
             const startRow = parseInt(document.getElementById('start-row').value, 10);
             const lastRow = parseInt(document.getElementById('end-row').value, 10);
             const batchSize = parseInt(document.getElementById('batch-size').value, 10);
 
-            if (!spreadsheetId || isNaN(startRow) || isNaN(lastRow) || isNaN(batchSize)) {
+            if (!spreadsheetId) {
+                log('無効なSpreadsheet URLです。URLからIDを抽出できませんでした。', 'red');
+                return;
+            }
+
+            if (isNaN(startRow) || isNaN(lastRow) || isNaN(batchSize)) {
                 log('すべてのフィールドを正しく入力してください。', 'red');
                 return;
             }
 
             logContainer.innerHTML = '';
+            log(`Spreadsheet ID: ${spreadsheetId} を抽出しました。`, 'blue');
             log('処理を開始します...');
             executeButton.disabled = true;
             stopButton.disabled = false;
@@ -121,13 +133,13 @@
 
                     const payload = {
                         spreadsheetId,
-                        token: TOKEN, // ★ 固定値を使用
+                        token: TOKEN,
                         startRow: start,
                         endRow: end,
                     };
 
                     try {
-                        const response = await fetch(GAS_URL, { // ★ 固定値を使用
+                        const response = await fetch(GAS_URL, {
                             method: 'POST',
                             mode: 'no-cors',
                             cache: 'no-cache',
